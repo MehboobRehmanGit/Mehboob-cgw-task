@@ -60,7 +60,7 @@ public class InvoiceController {
     
     public PageReference createInvoice() {
         Opportunity opp = [SELECT Id, AccountId, CloseDate, Name FROM Opportunity WHERE Id = :originRecord];
-        DateTime invoiceDate = DateTime.newInstance(opp.CloseDate, Time.newInstance(0, 0, 0, 0)); // Convert Date to DateTime
+        DateTime invoiceDate = DateTime.newInstance(opp.CloseDate, Time.newInstance(0, 0, 0, 0)); 
         DateTime dueDate = invoiceDate.addDays(30);
         
         String invoicePayload = '{' +
@@ -73,7 +73,7 @@ public class InvoiceController {
         System.debug('Invoice Payload: ' + invoicePayload);
         
         HttpRequest req = new HttpRequest();
-        req.setEndpoint(URL.getOrgDomainUrl().toExternalForm() + '/services/data/v58.0/sobjects/Invoice/'); // Change to v58.0 or your API version
+        req.setEndpoint(URL.getOrgDomainUrl().toExternalForm() + '/services/data/v58.0/sobjects/Invoice/');
         req.setMethod('POST');
         req.setHeader('Authorization', 'Bearer ' + UserInfo.getSessionId());
         req.setHeader('Content-Type', 'application/json');
