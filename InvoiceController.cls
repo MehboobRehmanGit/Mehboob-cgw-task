@@ -85,7 +85,6 @@ public class InvoiceController {
         if (res.getStatusCode() == 201) {
             Map<String, Object> jsonResponse = (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
             String invoiceId = (String) jsonResponse.get('id');
-            createInvoiceLineItems(invoiceId, opp.Id);
             
             PageReference pageRef = new PageReference('/' + invoiceId);
             pageRef.setRedirect(true);
@@ -100,21 +99,4 @@ public class InvoiceController {
             return null;
         }
     }
-    
-    private void createInvoiceLineItems(String invoiceId, String oppId) {
-        List<OpportunityLineItem> lineItems = [SELECT Quantity, UnitPrice, TotalPrice, Product2.Name FROM OpportunityLineItem WHERE OpportunityId = :oppId];
-        List<InvoiceLine> invoiceLineItems = new List<InvoiceLine>();
-        
-        for (OpportunityLineItem lineItem : lineItems) {
-            InvoiceLine invoiceLineItem = new InvoiceLine();
-            invoiceLineItem.InvoiceId = invoiceId;
-            invoiceLineItem.Quantity = lineItem.Quantity;
-            invoiceLineItem.UnitPrice = lineItem.UnitPrice;
-            invoiceLineItem.Description = lineItem.Product2.Name;
-            invoiceLineItems.add(invoiceLineItem);
-        }
-        
-        insert invoiceLineItems;
-    }
-    
 }
