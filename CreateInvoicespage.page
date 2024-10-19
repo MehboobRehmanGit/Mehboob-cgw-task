@@ -4,28 +4,33 @@
             <apex:pageBlockSection columns="2">
                 <apex:outputLabel value="Origin Record" />
                 <apex:outputText value="{!originRecord}" />
-
+                
                 <apex:outputLabel value="Account" />
                 <apex:outputText value="{!account}" />
-
+                
                 <apex:outputLabel value="Invoice Date" />
                 <apex:outputText value="{!invoiceDate}" />
-
+                
                 <apex:outputLabel value="Invoice Due Date" />
                 <apex:outputText value="{!invoiceDueDate}" />
-
+                
                 <apex:outputLabel value="Child Relationship Name" />
                 <apex:outputText value="{!childRelationshipName}" />
-
+                
                 <apex:outputLabel value="Line Item Description" />
                 <apex:outputText value="{!lineItemDescription}" />
-
+                
                 <apex:outputLabel value="Line Item Quantity" />
                 <apex:outputText value="{!lineItemQuantity}" />
-
+                
                 <apex:outputLabel value="Line Item Unit Price" />
                 <apex:outputText value="{!lineItemUnitPrice}" />
+                <apex:commandButton value="Show JSON" action="{!generateInvoiceJSON}" />
+                
             </apex:pageBlockSection>
         </apex:pageBlock>
-    </apex:form>							
+        <apex:outputPanel id="jsonOutput">
+            <apex:outputText value="{!jsonResponse}" escape="false"/>
+        </apex:outputPanel>
+    </apex:form>	
 </apex:page>
