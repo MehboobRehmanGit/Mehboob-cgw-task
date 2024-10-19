@@ -26,7 +26,8 @@
                 <apex:outputLabel value="Line Item Unit Price" />
                 <apex:outputText value="{!lineItemUnitPrice}" />
                 <apex:commandButton value="Show JSON" action="{!generateInvoiceJSON}" />
-                
+                <apex:commandButton value="Proceed to Create Invoice" action="{!createInvoice}" />
+
             </apex:pageBlockSection>
         </apex:pageBlock>
         <apex:outputPanel id="jsonOutput">
