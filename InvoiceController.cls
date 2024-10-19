@@ -8,9 +8,10 @@ public class InvoiceController {
     public Integer lineItemQuantity { get; set; }
     public Decimal lineItemUnitPrice { get; set; }
     
+    
     public String jsonResponse { get; set; }
-
-
+    
+    
     public InvoiceController() {
         originRecord = ApexPages.currentPage().getParameters().get('origin_record');
         account = ApexPages.currentPage().getParameters().get('account');
@@ -23,7 +24,7 @@ public class InvoiceController {
     }
     
     
-
+    
     public void generateInvoiceJSON() {
         
         Opportunity opp = [SELECT Id, Name, CloseDate, Account.Name FROM Opportunity WHERE Id = :originRecord];
@@ -34,7 +35,7 @@ public class InvoiceController {
         invoiceMap.put('ContactId', '0000000'); 
         invoiceMap.put('Date', opp.CloseDate);
         invoiceMap.put('DueDate', opp.CloseDate.addDays(30)); 
-
+        
         List<Map<String, Object>> lineItemList = new List<Map<String, Object>>();
         for (OpportunityLineItem lineItem : lineItems) {
             Map<String, Object> itemMap = new Map<String, Object>();
@@ -44,7 +45,7 @@ public class InvoiceController {
             itemMap.put('LineAmount', lineItem.TotalPrice);
             lineItemList.add(itemMap);
         }
-
+        
         invoiceMap.put('LineItems', lineItemList);
         jsonResponse = JSON.serialize(invoiceMap);
     }
@@ -52,5 +53,68 @@ public class InvoiceController {
     public String getJsonResponse() {
         return jsonResponse;
     }
-
+    
+    
+    
+    
+    
+    public PageReference createInvoice() {
+        Opportunity opp = [SELECT Id, AccountId, CloseDate, Name FROM Opportunity WHERE Id = :originRecord];
+        DateTime invoiceDate = DateTime.newInstance(opp.CloseDate, Time.newInstance(0, 0, 0, 0)); // Convert Date to DateTime
+        DateTime dueDate = invoiceDate.addDays(30);
+        
+        String invoicePayload = '{' +
+            '"BillingAccountId": "' + opp.AccountId + '",' +
+            '"InvoiceDate": "' + invoiceDate.format('yyyy-MM-dd') + '",' +
+            '"DueDate": "' + dueDate.addDays(30).format('yyyy-MM-dd') + '",' +
+            '"Status": "Draft"' +
+            '}';
+        
+        System.debug('Invoice Payload: ' + invoicePayload);
+        
+        HttpRequest req = new HttpRequest();
+        req.setEndpoint(URL.getOrgDomainUrl().toExternalForm() + '/services/data/v58.0/sobjects/Invoice/'); // Change to v58.0 or your API version
+        req.setMethod('POST');
+        req.setHeader('Authorization', 'Bearer ' + UserInfo.getSessionId());
+        req.setHeader('Content-Type', 'application/json');
+        req.setBody(invoicePayload);
+        
+        Http http = new Http();
+        HttpResponse res = http.send(req);
+        
+        if (res.getStatusCode() == 201) {
+            Map<String, Object> jsonResponse = (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
+            String invoiceId = (String) jsonResponse.get('id');
+            createInvoiceLineItems(invoiceId, opp.Id);
+            
+            PageReference pageRef = new PageReference('/' + invoiceId);
+            pageRef.setRedirect(true);
+            return pageRef;
+        }else if (res.getStatusCode() != 201) {
+            System.debug('Error creating Invoice: ' + res.getStatus() + ' - ' + res.getBody());
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Error creating Invoice: ' + res.getStatus() + ' - ' + res.getBody()));
+            return null;
+        }
+        else {
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 'Error creating Invoice: ' + res.getStatus()));
+            return null;
+        }
+    }
+    
+    private void createInvoiceLineItems(String invoiceId, String oppId) {
+        List<OpportunityLineItem> lineItems = [SELECT Quantity, UnitPrice, TotalPrice, Product2.Name FROM OpportunityLineItem WHERE OpportunityId = :oppId];
+        List<InvoiceLine> invoiceLineItems = new List<InvoiceLine>();
+        
+        for (OpportunityLineItem lineItem : lineItems) {
+            InvoiceLine invoiceLineItem = new InvoiceLine();
+            invoiceLineItem.InvoiceId = invoiceId;
+            invoiceLineItem.Quantity = lineItem.Quantity;
+            invoiceLineItem.UnitPrice = lineItem.UnitPrice;
+            invoiceLineItem.Description = lineItem.Product2.Name;
+            invoiceLineItems.add(invoiceLineItem);
+        }
+        
+        insert invoiceLineItems;
+    }
+    
 }
