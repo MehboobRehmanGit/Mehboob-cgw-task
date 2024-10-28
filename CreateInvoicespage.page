@@ -1,5 +1,5 @@
 <apex:page controller="InvoiceController">
-    <apex:form>
+    <apex:form >
         <apex:pageBlock title="Invoice Details">
             <apex:pageBlockSection columns="2">
                 <apex:outputLabel value="Origin Record" />
@@ -26,12 +26,14 @@
                 <apex:outputLabel value="Line Item Unit Price" />
                 <apex:outputText value="{!lineItemUnitPrice}" />
                 <apex:commandButton value="Show JSON" action="{!generateInvoiceJSON}" />
-                <apex:commandButton value="Proceed to Create Invoice" action="{!createInvoice}" />
 
             </apex:pageBlockSection>
         </apex:pageBlock>
         <apex:outputPanel id="jsonOutput">
             <apex:outputText value="{!jsonResponse}" escape="false"/>
+        <apex:outputPanel rendered="{!NOT(ISBLANK(jsonResponse))}">
+            <apex:commandButton value="Proceed to Create Invoice" action="{!createInvoice}" />
+            </apex:outputPanel>
         </apex:outputPanel>
     </apex:form>	
 </apex:page>
